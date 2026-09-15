@@ -114,10 +114,12 @@ for dir in "$SOURCE_DIR"/*/; do
   pw="${PASSMAP[$name]}"
   out="$OUTPUT_DIR/$name.7z"
   [ "$TOOL" = "zip" ] && out="$OUTPUT_DIR/$name.zip"
+  rm -f "$out"   # 清掉上次可能残留的损坏文件，避免二次报错
   if [ "$TOOL" = "7z" ]; then
-    7z a -t7z -mhe=on -p"$pw" -y "$out" "$dir" >/dev/null 2>&1
+    # 进入源目录后用基名打包，压缩包内只含文件夹本身（不含绝对路径）
+    ( cd "$SOURCE_DIR" && 7z a -t7z -mhe=on -p"$pw" -y "$out" "$name" >/dev/null 2>&1 )
   else
-    zip -r -P "$pw" "$out" "$name" >/dev/null 2>&1
+    ( cd "$SOURCE_DIR" && zip -r -P "$pw" "$out" "$name" >/dev/null 2>&1 )
   fi
   if [ $? -eq 0 ] && [ -f "$out" ]; then
     echo "[完成] $name 已压缩（密码: $pw）"

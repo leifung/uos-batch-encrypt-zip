@@ -12,8 +12,8 @@ OUTPUT_DIR="$(cd "$(dirname "$0")" && pwd)/打包结果"
 # 密码列表文件（格式见下）
 PASSWORD_FILE="$(cd "$(dirname "$0")" && pwd)/密码列表.txt"
 
-# 压缩工具：auto（自动选7z优先）| 7z | zip
-TOOL="auto"
+# 压缩工具：zip（默认，通用性好）| 7z | auto（自动选7z优先）
+TOOL="zip"
 # 密码列表里"找不到对应文件夹密码"时是否跳过而非中断：yes / no
 SKIP_ON_MISSING="yes"
 
@@ -33,7 +33,19 @@ check_tool() {
   else echo none; fi
 }
 if [ "$TOOL" = "auto" ]; then TOOL="$(check_tool)"; fi
-if [ "$TOOL" = "none" ]; then
+# 校验所选工具是否可用
+if [ "$TOOL" = "7z" ]; then
+  if ! command -v 7z >/dev/null 2>&1 && ! command -v 7za >/dev/null 2>&1; then
+    echo "错误：未找到 7z。请先安装： sudo apt install p7zip-full"
+    exit 1
+  fi
+  TOOL="7z"
+elif [ "$TOOL" = "zip" ]; then
+  if ! command -v zip >/dev/null 2>&1; then
+    echo "错误：未找到 zip。请先安装： sudo apt install zip"
+    exit 1
+  fi
+elif [ "$TOOL" = "none" ]; then
   echo "错误：未找到 7z 或 zip。请先安装： sudo apt install p7zip-full  或  sudo apt install zip"
   exit 1
 fi
